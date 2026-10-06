@@ -75,7 +75,11 @@ ol.steps > li p { margin: 4px 0; }
 .callout.tip { border-color: var(--good); background: var(--good-bg); }
 .callout b:first-child { margin-right: 4px; }
 .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin-bottom: 14px; }
-table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; color: var(--fg); }
+td { color: var(--fg); }
+td code, .tablewrap code { color: var(--fg); }
+td a { color: var(--accent); font-weight: 500; }
+a { color: var(--accent); }
 th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { background: var(--surface-2); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); white-space: nowrap; }
 tr:last-child td { border-bottom: 0; }
@@ -108,13 +112,14 @@ svg .pt { fill: var(--bad); }
 </div>
 
 <div class="chips" aria-label="Sections">
-  <a href="#steps">1 Steps</a><a href="#finder">2 Finder</a><a href="#recipes">3 Code</a><a href="#time">Time series</a><a href="#html">HTML</a><a href="#params">4 Params</a><a href="#mc">5 Multiple choice</a><a href="#errors">6 Errors</a>
+  <a href="#steps">1 Steps</a><a href="#finder">2 Finder</a><a href="#adapt">2B New data</a><a href="#recipes">3 Code</a><a href="#time">Time series</a><a href="#html">HTML</a><a href="#params">4 Params</a><a href="#mc">5 Multiple choice</a><a href="#errors">6 Errors</a>
 </div>
 
 <nav class="index" aria-label="Sections">
   <h2>Start here</h2>
   <a href="#steps">1. Quiz-day steps</a>
   <a href="#finder">2. What chart do I use?</a>
+  <a href="#adapt">2B. Change code for new data</a>
   <h2>Code by scenario</h2>
   <a href="#recipes">3. Code recipes</a>
   <a href="#r-setup">&nbsp;&nbsp;Setup and load</a>
@@ -214,10 +219,150 @@ df.head()                         # first five rows</code></pre></div>
   <div class="callout tip"><b>Pie rule:</b> pie or donut only when the column has 5 labels or fewer. With 6 or more labels use a count plot. Check with <code class="i">df['col'].value_counts()</code> first.</div>
 </section>
 
+<!-- ===================== 2B ADAPT ===================== -->
+<section class="block" id="adapt">
+  <h2 class="sec">2B. Change the code to fit new data</h2>
+  <p class="sec-note">The quiz will use a new CSV with different column names. Every recipe below works the same way: only the file name, column names, labels and colors change. Use the blanks below, then copy the matching recipe.</p>
+
+  <div class="card">
+    <h3>The 5 things you change, and where to find each</h3>
+    <div class="tablewrap" style="margin:8px 0 0"><table>
+      <thead><tr><th>Change this</th><th>Class example</th><th>Where to get the new value</th></tr></thead>
+      <tbody>
+        <tr><td>File name</td><td><code>'student.csv'</code></td><td>The CSV name in the file panel. Exact spelling, in quotes.</td></tr>
+        <tr><td>Column names</td><td><code>'math_score'</code>, <code>'gender'</code></td><td>The header row of <code>df.head()</code>. Copy exactly, including capitals, spaces and underscores, in quotes.</td></tr>
+        <tr><td>Which type each column is</td><td>gender = category, math_score = number</td><td>Words or labels = categorical. Numbers = numeric. Dates = time series. Check with <code>df.dtypes</code>.</td></tr>
+        <tr><td>Group labels in a color dict</td><td><code>{'female':'hotpink','male':'skyblue'}</code></td><td><code>df['col'].value_counts().index.tolist()</code> shows the exact labels. Skip <code>palette=</code> if you do not need custom colors.</td></tr>
+        <tr><td>Column positions for <code>iloc</code></td><td><code>iloc[:, 5:8]</code></td><td>Count from 0 across <code>df.head()</code>. Start = first position, end = last position + 1.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card recipe" data-k="template blanks fill in adapt new data swap column names">
+    <h3>Fill-in-the-blank templates</h3>
+    <p class="use"><b>How to use:</b> replace the CAPITAL words with your file or column names (keep the quotes). Delete any argument you do not need.</p>
+    <div class="codewrap"><pre><code># ---- setup (always) ----
+df = pd.read_csv('FILE.csv')
+df.head()
+
+# ---- 1 category: counts ----
+plt.figure(figsize=(5, 3))
+sns.countplot(data=df, x='CAT')
+plt.show()
+
+# ---- 1 category: pie or donut (5 labels or fewer) ----
+freq   = df['CAT'].value_counts().tolist()
+labels = df['CAT'].value_counts().index.tolist()
+plt.figure(figsize=(4, 4))
+plt.pie(freq, labels=labels, autopct='%1.1f%%')                              # pie
+# plt.pie(freq, labels=labels, autopct='%1.1f%%', wedgeprops={"width": 0.5}) # donut
+plt.show()
+
+# ---- 1 number: distribution ----
+plt.figure(figsize=(5, 3))
+sns.histplot(data=df, x='NUM', kde=True)
+plt.show()
+
+# ---- 2 numbers: relationship (add hue for a group) ----
+plt.figure(figsize=(5, 3))
+sns.scatterplot(data=df, x='NUM1', y='NUM2', hue='CAT')
+plt.grid(True)
+plt.show()
+
+# ---- many numbers: correlation heatmap ----
+num_df = df.iloc[:, START:END]      # END = last numeric column position + 1
+coco = num_df.corr()
+plt.figure(figsize=(6, 6))
+sns.heatmap(coco, square=True, cmap='PiYG_r', linewidth=0.5, vmin=-1, vmax=1, annot=True, fmt='.1f')
+plt.show()
+
+# ---- number compared across groups ----
+sns.catplot(data=df, x='CAT', y='NUM', kind='box')                 # box plot
+plt.show()
+sns.violinplot(data=df, x='CAT', y='NUM')                          # violin
+plt.show()
+plt.figure(figsize=(5, 3))
+sns.pointplot(data=df, x='CAT', y='NUM')                           # mean + 95% interval
+plt.show()
+plt.figure(figsize=(5, 3))
+sns.kdeplot(data=df, x='NUM', hue='CAT', common_norm=False, fill=True)   # curves by group
+plt.show()
+
+# ---- time series with trend ----
+df['DATE'] = pd.to_datetime(df['DATE'])
+df['Date_ordinal'] = df['DATE'].map(pd.Timestamp.toordinal)
+z = np.polyfit(df['Date_ordinal'], df['VALUE'], 2)
+p = np.poly1d(z)
+plt.figure(figsize=(12, 5))
+sns.lineplot(data=df, x='DATE', y='VALUE', label='actual')
+plt.plot(df['DATE'], p(df['Date_ordinal']), label='trend')
+plt.legend()
+plt.gcf().autofmt_xdate()
+plt.show()</code></pre></div>
+    <p class="read"><b>Blanks:</b> <code class="i">FILE</code> = CSV name. <code class="i">CAT</code> = a text column. <code class="i">NUM</code>, <code class="i">NUM1</code>, <code class="i">NUM2</code> = number columns. <code class="i">DATE</code> = the date column. <code class="i">VALUE</code> = the number to trend. <code class="i">START</code> and <code class="i">END</code> = column positions.</p>
+  </div>
+
+  <div class="card recipe" data-k="worked example translate question new dataset sales">
+    <h3>Worked example: a question on a dataset you have never seen</h3>
+    <p class="use"><b>Question:</b> "Using <code class="i">sales.csv</code> (columns: region, product, units, revenue, order_date): (a) show how many orders each region has, (b) show the distribution of revenue, (c) compare revenue across products, (d) are units and revenue related?"</p>
+    <ol class="steps">
+      <li><div><h3>Read the file</h3><div class="codewrap"><pre><code>df = pd.read_csv('sales.csv')
+df.head()</code></pre></div></div></li>
+      <li><div><h3>(a) "how many ... each region": category, counts</h3><div class="codewrap"><pre><code>plt.figure(figsize=(5, 3))
+sns.countplot(data=df, x='region')
+plt.show()</code></pre></div><p>If region has 5 labels or fewer, a pie is also allowed.</p></div></li>
+      <li><div><h3>(b) "distribution of revenue": one number</h3><div class="codewrap"><pre><code>plt.figure(figsize=(5, 3))
+sns.histplot(data=df, x='revenue', kde=True)
+plt.show()</code></pre></div></div></li>
+      <li><div><h3>(c) "compare revenue across products": number by category</h3><div class="codewrap"><pre><code>sns.catplot(data=df, x='product', y='revenue', kind='box')
+plt.show()</code></pre></div></div></li>
+      <li><div><h3>(d) "are units and revenue related": two numbers</h3><div class="codewrap"><pre><code>plt.figure(figsize=(5, 3))
+sns.scatterplot(data=df, x='units', y='revenue')
+plt.grid(True)
+plt.show()</code></pre></div><p>Then say it: "There is a positive (or negative, or no) relationship between units and revenue."</p></div></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Question words that tell you what to use</h3>
+    <div class="tablewrap" style="margin:8px 0 0"><table>
+      <thead><tr><th>If the question says...</th><th>It means...</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td>"how many", "frequency", "count", "most common"</td><td>count a category</td><td>countplot</td></tr>
+        <tr><td>"percent", "proportion", "share"</td><td>part of the whole</td><td>pie/donut (5 labels or fewer) or countplot with <code>stat='percent'</code></td></tr>
+        <tr><td>"distribution", "spread", "shape", "range of values"</td><td>one number</td><td>histplot, kdeplot</td></tr>
+        <tr><td>"outliers", "median", "quartiles"</td><td>one number by group</td><td>box plot</td></tr>
+        <tr><td>"relationship", "related", "correlated", "associated"</td><td>two numbers</td><td>scatterplot (or heatmap for many)</td></tr>
+        <tr><td>"compare ... across / by / between"</td><td>number by category</td><td>box, violin, pointplot, kdeplot with hue</td></tr>
+        <tr><td>"separately for each", "by gender"</td><td>add a group</td><td>add <code>hue='CAT'</code></td></tr>
+        <tr><td>"over time", "trend", "change by year/month"</td><td>date + number</td><td>lineplot, plus polyfit for a trend line</td></tr>
+        <tr><td>"average", "mean" by group</td><td>group means</td><td>pointplot</td></tr>
+        <tr><td>"correlation between all", "which variables are related"</td><td>many numbers</td><td><code>corr()</code> + heatmap</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
 <!-- ===================== 3 RECIPES ===================== -->
 <section class="block" id="recipes">
   <h2 class="sec">3. Code recipes by scenario</h2>
   <p class="sec-note">Each recipe shows when to use it, the code from class, and how to read the result. Replace <code class="i">df</code>, column names and colors with yours.</p>
+
+  <h3>Coverage: every class notebook and where its code is</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Class file</th><th>What it covers</th><th>Where in this sheet</th></tr></thead>
+    <tbody>
+      <tr><td>Lecture 1 and 2 slides</td><td>Libraries, linspace, plt styling, nbconvert, chart rules, box plot, KDE common_norm</td><td><a href="#r-gen">G</a>, <a href="#html">I</a>, <a href="#mc">Section 5</a></td></tr>
+      <tr><td>9.1.26 class exercise 1 and 2 (intro Python)</td><td>linspace + log / sin, lineplot of months and revenue, nbconvert</td><td><a href="#r-gen">G. Made-up data</a>, <a href="#html">I. HTML</a></td></tr>
+      <tr><td>Categorical notebook</td><td>countplot, percent, simple pie, value_counts, pie, donut</td><td><a href="#r-cat">B. One category</a></td></tr>
+      <tr><td>Exe 4 (9.8)</td><td>Pie, donut, countplot percent, histogram bins=20 with kde, KDE</td><td><a href="#r-cat">B</a>, <a href="#r-num">C</a></td></tr>
+      <tr><td>Numeric (student)</td><td>histplot variations, kde, scatter, scatter with hue</td><td><a href="#r-num">C</a>, <a href="#r-two">D</a></td></tr>
+      <tr><td>Numeric (wine)</td><td>iloc, corr, heatmap, mask, scatter, 2D kde, stacking, jointplot, contour</td><td><a href="#r-setup">A</a>, <a href="#r-many">E</a></td></tr>
+      <tr><td>Multivariate (10.6)</td><td>box, violin, pointplot (3 versions + range), KDE by gender</td><td><a href="#r-group">F. Compare groups</a></td></tr>
+      <tr><td>Gold and platinum (10.6)</td><td>to_datetime, lineplot for gold, platinum and both</td><td><a href="#time">H. Steps 1 and 2</a></td></tr>
+      <tr><td>Trend analysis (10.6)</td><td>toordinal, polyfit, poly1d, trend line with legend</td><td><a href="#time">H. Steps 1 to 3</a></td></tr>
+    </tbody>
+  </table></div>
 </section>
 
 <!-- ---- Setup ---- -->
@@ -264,6 +409,15 @@ sns.countplot(data=df, x='parental_education', hue='parental_education',
               stat='percent')
 plt.xticks(rotation=40)
 plt.show()</code></pre></div>
+    <div class="codewrap"><pre><code># gender as percent
+plt.figure(figsize=(5, 3))
+sns.countplot(data=df, x='gender', hue='gender',
+              palette={'female':'hotpink', 'male':'skyblue'},
+              stat="percent")
+plt.show()
+
+# counts of every math score (81 different values)
+df['math_score'].value_counts()</code></pre></div>
     <p class="read"><b>Read it:</b> <code class="i">stat='percent'</code> changes the y-axis from counts to percent. <code class="i">plt.xticks(rotation=40)</code> tilts the labels. <code class="i">parental_education</code> has 6 labels, so a count plot is the right choice.</p>
   </div>
 
@@ -276,6 +430,19 @@ gender       = df['gender'].value_counts().index.tolist()     # ['female', 'male
 gender_color = ['hotpink', 'skyblue']
 print(gender, gender_freq)</code></pre></div>
     <p class="read"><b>Read it:</b> <code class="i">value_counts()</code> counts each label, biggest first. <code class="i">.tolist()</code> turns the counts into a list. <code class="i">.index.tolist()</code> turns the label names into a list. The names and counts line up in the same order.</p>
+  </div>
+
+  <div class="card recipe" data-k="simple pie chart iphone ipad lists made up">
+    <h3>Simple pie from two typed lists</h3>
+    <p class="use"><b>Use when:</b> the question gives you the numbers directly instead of a CSV column.</p>
+    <div class="codewrap"><pre><code>prod = [500, 300]
+prod_name = ['iphone', 'ipad']
+color = ['lightblue', 'steelblue']
+
+plt.figure(figsize=(4, 4))
+plt.pie(prod, labels=prod_name, colors=color, autopct='%1.2f%%')
+plt.show()</code></pre></div>
+    <p class="read"><b>Read it:</b> same pie code, just with your own lists. Numbers first, names in <code class="i">labels=</code>, colors in <code class="i">colors=</code>.</p>
   </div>
 
   <div class="card recipe" data-k="pie chart autopct colors labels">
@@ -293,6 +460,15 @@ plt.show()</code></pre></div>
     <div class="codewrap"><pre><code>plt.figure(figsize=(4, 4))
 plt.pie(gender_freq, labels=gender, colors=gender_color, autopct='%1.1f%%',
         startangle=90, wedgeprops={"width": 0.5})
+plt.show()</code></pre></div>
+    <p class="read"><b>Same recipe for another column</b> (exercise 4: <code class="i">test_preparation_course</code>, none 642 and completed 358):</p>
+    <div class="codewrap"><pre><code>t_value  = df["test_preparation_course"].value_counts().tolist()
+t_names  = df['test_preparation_course'].value_counts().index.tolist()
+t_colors = ['red', 'teal']
+
+plt.figure(figsize=(3, 3))
+plt.pie(t_value, labels=t_names, colors=t_colors, autopct='%1.0f%%',
+        wedgeprops={"width": 0.5}, startangle=180)   # donut; drop wedgeprops for a plain pie
 plt.show()</code></pre></div>
     <p class="read"><b>Read it:</b> <code class="i">wedgeprops={"width": 0.5}</code> is what cuts the hole (a smaller width means a thinner ring). <code class="i">startangle</code> rotates where the first slice begins.</p>
   </div>
@@ -378,6 +554,7 @@ plt.show()</code></pre></div>
     <h3>Half heatmap with numbers</h3>
     <p class="use"><b>Use when:</b> you want only one triangle (the other half repeats it) and the values printed.</p>
     <div class="codewrap"><pre><code>tri_matrix = np.triu(coco)         # upper-triangle matrix, used as the mask
+print(tri_matrix)                  # zeros below the diagonal
 
 plt.figure(figsize=(6, 6))
 sns.heatmap(coco, square=True, cmap='PiYG_r', linewidth=0.5, vmin=-1, vmax=1,
@@ -450,6 +627,11 @@ sns.pointplot(data=df, x='gender', y='math_score', linestyle='--')
 plt.title('Mean and 95% Confident Interval of Math Score by Gender')
 plt.show()
 
+# mean + 95% confidence interval across ethnicity
+plt.figure(figsize=(5, 3))
+sns.pointplot(data=df, x='ethnicity', y='math_score', linestyle='--')
+plt.show()
+
 # whole range (min, max) + mean per group
 plt.figure(figsize=(5, 3))
 sns.pointplot(data=df, x="ethnicity", y="math_score", errorbar=("pi", 100),
@@ -501,7 +683,14 @@ plt.show()
 # other class examples
 x = np.linspace(0, 10)      # default is 50 points
 y = np.sin(x)
-y = 2 * x + 6               # a straight line</code></pre></div>
+y = 2 * x + 6               # a straight line
+
+# sin curve drawn with plt.plot
+plt.figure(figsize=(5, 3))
+plt.plot(x, np.sin(x), color='hotpink', lw=5)
+plt.gca().set_facecolor('lightgrey')
+plt.grid()
+plt.show()</code></pre></div>
     <p class="read"><b>Read it:</b> <code class="i">np.linspace(start, stop, num)</code> gives <code class="i">num</code> evenly spaced numbers and <b>includes both ends</b>. More points = smoother curve. <code class="i">np.linspace(0, 10, 5)</code> is <code class="i">[0, 2.5, 5, 7.5, 10]</code>. Functions like <code class="i">np.log</code> and <code class="i">np.sin</code> work on the whole array at once.</p>
   </div>
 
@@ -516,6 +705,15 @@ print(revenue)
 plt.figure(figsize=(5, 3))
 sns.lineplot(x=months, y=revenue, color='orchid', lw=3, linestyle='--',
              marker='o', markersize=10, mfc='green', mec='black')
+plt.grid()
+plt.show()</code></pre></div>
+    <div class="codewrap"><pre><code># second class example: Aug to Dec revenue
+months  = ['aug', 'sep', 'oct', 'nov', 'dec']
+revenue = [5000, 3000, 4000, 1500, 5200]
+
+plt.figure(figsize=(5, 3))
+sns.lineplot(x=months, y=revenue, color='violet', lw=3, linestyle='--',
+             marker='o', markersize=10, mfc='deeppink', mec='black')
 plt.grid()
 plt.show()</code></pre></div>
     <p class="read"><b>Read it:</b> here there is no <code class="i">data=</code>, so give <code class="i">x=</code> and <code class="i">y=</code> the lists directly. Both lists must be the same length. Each list item is one point.</p>
@@ -546,6 +744,22 @@ plt.figure(figsize=(12, 5))
 sns.lineplot(data=df, x='Date', y='Gold', marker='X',
              markersize=12, color='goldenrod')
 plt.grid(axis='y', lw=0.5)
+plt.show()
+
+# platinum only
+plt.figure(figsize=(14, 5))
+sns.lineplot(data=df, x='Date', y='Platinum', marker='X',
+             markersize=12, linestyle='--', color='gray')
+plt.grid(axis='y')
+plt.gcf().autofmt_xdate()
+plt.show()
+
+# gold only, dashed, with date labels tilted
+plt.figure(figsize=(14, 5))
+sns.lineplot(data=df, x='Date', y='Gold', marker='X',
+             markersize=12, linestyle='--', color='orange')
+plt.grid(axis='y')
+plt.gcf().autofmt_xdate()
 plt.show()
 
 # gold and platinum together
